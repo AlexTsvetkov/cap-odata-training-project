@@ -1,0 +1,14 @@
+---
+spring:
+  config.activate.on-profile: cloud
+  sql.init.platform: h2
+#  datasource:
+#      url: jdbc:postgresql://${vcap.services.books-postgres-db.credentials.hostname}:${vcap.services.books-postgres-db.credentials.port}/${vcap.services.books-postgres-db.credentials.dbname}
+#      username: ${vcap.services.books-postgres-db.credentials.username}
+#      password: ${vcap.services.books-postgres-db.credentials.password}
+#      driver-class-name: org.postgresql.Driver
+cds:
+  datasource.auto-config.enabled: false
+  sql.supportedLocales: "*"
+server:
+  port: 8081

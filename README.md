@@ -1,0 +1,1 @@
+cf space <space_name> --guid
