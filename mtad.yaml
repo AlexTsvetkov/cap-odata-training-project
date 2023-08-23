@@ -49,26 +49,49 @@ modules:
     properties:
       TENANT_HOST_PATTERN: '^(.*)-approuter-xv.${default-domain}'
 
+
   - name: mtx-sidecar
     type: nodejs
-    path: mtx-sidecar
+    path: mtx/sidecar # adapted path
+    build-parameters: # added build section
+      builder: custom
+      build-result: gen
+      commands:
+        - npm run build
+      requires:
+        - name: bookstore-cap-java-app
     parameters:
       memory: 256M
-      disk-quota: 1024M
-      build-parameters:
-        builder: custom
-        build-result: gen
-        commands:
-          - npm run build
-        requires:
-          - name: bookstore-cap-java-app
-      requires:
-        - name: service-manager
-        - name: xsuaa-bookstore
-      provides:
-        - name: sidecar
-          properties:
-            mtx-url: ${default-url}
+      disk-quota: 1G
+    requires:
+      - name: xsuaa-bookstore
+      - name: bookstore-db
+      - name: service-manager
+    provides:
+      - name: mtx-api
+        properties:
+          mtx-url: ${default-url}
+
+#  - name: mtx-sidecar
+#    type: nodejs
+#    path: mtx/sidecar
+#    parameters:
+#      memory: 256M
+#      disk-quota: 1024M
+#      build-parameters:
+#        builder: custom
+#        build-result: gen
+#        commands:
+#          - npm run build
+#        requires:
+#          - name: bookstore-cap-java-app
+#      requires:
+#        - name: service-manager
+#        - name: xsuaa-bookstore
+#      provides:
+#        - name: sidecar
+#          properties:
+#            mtx-url: ${default-url}
 
 resources:
   - name: bookstore-db
@@ -117,14 +140,13 @@ resources:
       service-plan: application
       config:
         appName: bookstore-cap-java-app
-        xsappname: uniqname
+        xsappname: ~{xsuaa-bookstore/XSAPPNAME}
         appUrls:
           getDependencies: ~{bookstore-cap-java-app/srv-url}/mt/v1.0/subscriptions/dependencies
           onSubscription: ~{bookstore-cap-java-app/srv-url}/mt/v1.0/subscriptions/tenants/{tenantId}
         displayName: bookshop-java
         description: A simple CAP Java project.
         category: 'Category'
-
 
 
   - name: service-manager

@@ -6,5 +6,8 @@
   "repository": "<Add your repository here>",
   "dependencies": {
     "@sap/capire-products": "file:sap-capire-products-1.0.0.tgz"
-  }
+  },
+  "workspaces": [
+    "mtx/sidecar"
+  ]
 }
