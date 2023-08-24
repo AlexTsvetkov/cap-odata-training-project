@@ -30,6 +30,10 @@ modules:
           CDS_MULTITENANCY_SIDECAR_URL: ~{mtx-url}
       - name: bookstore-registry
       - name: bookstore-service-manager
+      - name: approuter-api
+        properties:
+          CDS_MULTITENANCY_APPUI_URL: ~{approuter_url}
+          CDS_MULTITENANCY_APPUI_TENANTSEPARATOR: "."
 
   # --------------------- MTX ---------------------
   - name: bookstore-mtx
@@ -74,7 +78,7 @@ modules:
           forwardAuthToken: true
       - name: bookstore-auth
     properties:
-      TENANT_HOST_PATTERN: '^(.*)-approuter-xv.${default-domain}'
+      TENANT_HOST_PATTERN: '^(.*)-${space}-${app-name}.${default-domain}'
 resources:
 
   # --------------------- XSUAA ---------------------
@@ -93,13 +97,14 @@ resources:
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
+      - name: bookstore-auth
     parameters:
       service: saas-registry
       service-plan: application
       config:
         xsappname: bookstore-${org}-${space}
         appName: bookstore-${org}-${space}
-        displayName: bookstore
+        displayName: bookstore-${org}-${space}
         description: A simple CAP project.
         category: 'Category'
         appUrls:

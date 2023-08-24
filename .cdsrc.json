@@ -4,7 +4,8 @@
       "auth": "xsuaa"
     },
     "db": "hana",
-    "multitenancy": true
+    "multitenancy": true,
+    "auth": "xsuaa"
   },
   "profiles": [
     "with-mtx-sidecar",
