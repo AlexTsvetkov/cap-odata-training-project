@@ -3,7 +3,7 @@
     {
       "source": "^(.*)$",
       "target": "$1",
-      "destination": "bookstore-cap-java-app"
+      "destination": "backend"
     }
   ]
 }
