@@ -1,37 +1,16 @@
 {
-    "build": {
-        "target": ".",
-        "tasks": [
-            {
-                "src": "db",
-                "for": "hana",
-                "options": {
-                    "model": [
-                        "db",
-                        "srv"
-                    ]
-                }
-            },
-            {
-                "src": "srv",
-                "for": "java-cf",
-                "options": {
-                    "model": [
-                        "db",
-                        "srv"
-                    ]
-                }
-            }
-        ]
+  "requires": {
+    "[production]": {
+      "auth": "xsuaa"
     },
-    "hana": {
-        "deploy-format": "hdbtable"
-    },
-    "profiles": [
-        "with-mtx-sidecar",
-        "java"
-    ],
-    "requires": {
-        "multitenancy": true
-    }
+    "db": "hana",
+    "multitenancy": true
+  },
+  "profiles": [
+    "with-mtx-sidecar",
+    "java"
+  ],
+  "build": {
+    "target": "."
+  }
 }
