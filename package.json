@@ -9,5 +9,8 @@
   },
   "workspaces": [
     "mtx/sidecar"
-  ]
+  ],
+  "devDependencies": {
+    "@sap/cds-dk": "^7"
+  }
 }

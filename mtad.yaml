@@ -1,30 +1,61 @@
-_schema-version: "3.1"
+_schema-version: '3.1'
 ID: bookstore
-version: 1.0.0
-
+version: 1.0.0-SNAPSHOT
+description: "A simple CAP project."
+parameters:
+  enable-parallel-deployments: true
 modules:
-  # --------------------- APPLICATION ---------------------
+  # --------------------- Java Application ---------------------
   - name: bookstore-cap-java-app
     type: java
     path: srv/target/bookstore-exec.jar
     random-route: true
     memory: 1024M
-    properties:
+    parameters:
       buildpack: sap_java_buildpack
+    properties:
+      SPRING_PROFILES_ACTIVE: cloud,sandbox
       JBP_CONFIG_COMPONENTS: "jres: ['com.sap.xs.java.buildpack.jdk.SAPMachineJDK']"
       JBP_CONFIG_SAP_MACHINE_JDK: "[version: 17.+, default_debug_agent_active: true]"
       JBP_CONFIG_SPRING_AUTO_RECONFIGURATION: '{enabled: false}'
-    SPRING_PROFILES_ACTIVE: cloud
     provides:
-      - name: bookstore-cap-java-app # required by consumers of CAP services (e.g. approuter)
+      - name: srv-api # required by consumers of CAP services (e.g. approuter)
         properties:
           srv-url: ${default-url}
     requires:
-      - name: xsuaa-bookstore
-      - name: bookstore-db
-      - name: service-manager
-      - name: mtx-sidecar
+      - name: bookstore-auth
+      - name: mtx-api
+        properties:
+          CDS_MULTITENANCY_MTXS_ENABLED: true
+          CDS_MULTITENANCY_SIDECAR_URL: ~{mtx-url}
+      - name: bookstore-registry
+      - name: bookstore-service-manager
+      - name: approuter-api
+        properties:
+          CDS_MULTITENANCY_APPUI_URL: ~{approuter_url}
+          CDS_MULTITENANCY_APPUI_TENANTSEPARATOR: "."
 
+  # --------------------- MTX ---------------------
+  - name: bookstore-mtx
+    type: nodejs
+    path: mtx/sidecar
+    requires:
+      - name: bookstore-auth
+      - name: bookstore-service-manager
+    build-parameters:
+      builder: custom
+      build-result: gen
+      commands:
+        - npm run build
+      requires:
+        - name: bookstore-cap-java-app
+    parameters:
+      memory: 256M
+      disk-quota: 512M
+    provides:
+      - name: mtx-api
+        properties:
+          mtx-url: ${default-url}
 
   # --------------------- APPROUTER ---------------------
   - name: approuter-bookstore
@@ -39,117 +70,53 @@ modules:
           approuter_url: ${default-url}
           application: ${app-name}
     requires:
-      - name: bookstore-cap-java-app
+      - name: srv-api
         group: destinations
         properties:
-          name: bookstore-cap-java-app
+          name: backend
           url: ~{srv-url}
           forwardAuthToken: true
-      - name: xsuaa-bookstore
+      - name: bookstore-auth
     properties:
-      TENANT_HOST_PATTERN: '^(.*)-approuter-xv.${default-domain}'
-
-
-  - name: mtx-sidecar
-    type: nodejs
-    path: mtx/sidecar # adapted path
-    build-parameters: # added build section
-      builder: custom
-      build-result: gen
-      commands:
-        - npm run build
-      requires:
-        - name: bookstore-cap-java-app
-    parameters:
-      memory: 256M
-      disk-quota: 1G
-    requires:
-      - name: xsuaa-bookstore
-      - name: bookstore-db
-      - name: service-manager
-    provides:
-      - name: mtx-api
-        properties:
-          mtx-url: ${default-url}
-
-#  - name: mtx-sidecar
-#    type: nodejs
-#    path: mtx/sidecar
-#    parameters:
-#      memory: 256M
-#      disk-quota: 1024M
-#      build-parameters:
-#        builder: custom
-#        build-result: gen
-#        commands:
-#          - npm run build
-#        requires:
-#          - name: bookstore-cap-java-app
-#      requires:
-#        - name: service-manager
-#        - name: xsuaa-bookstore
-#      provides:
-#        - name: sidecar
-#          properties:
-#            mtx-url: ${default-url}
-
+      TENANT_HOST_PATTERN: '^(.*)-${space}-${app-name}.${default-domain}'
 resources:
-  - name: bookstore-db
-    type: org.cloudfoundry.existing-service
 
-  - name: xsuaa-bookstore
+  # --------------------- XSUAA ---------------------
+  - name: bookstore-auth
     type: org.cloudfoundry.managed-service
-    requires:
-      - name: approuter-api
-    properties:
-      XSAPPNAME: ${xsuaa-app}
     parameters:
-      service-plan: application
       service: xsuaa
-      shared: true
-      xsuaa-app: ${space}-~{approuter-api/application}
+      service-plan: application
+      path: ./xs-security.json
       config:
-        xsappname: ${xsuaa-app}
+        xsappname: bookstore-${org}-${space}
         tenant-mode: shared
-        description: Security profile of called application
-        scopes:
-          - name: "$XSAPPNAME.Callback"
-            description: With this scope set, the callbacks for tenant onboarding, offboarding and getDependencies can be called.
-            grant-as-authority-to-apps:
-              - "$XSAPPNAME(application,sap-provisioning,tenant-onboarding)"
-          - name: "$XSAPPNAME.Display"
-            description: Display content
-          - name: "$XSAPPNAME.read"
-            description: With this scope, USER can read products.
-        role-templates:
-          - name: Viewer
-            description: View content
-            scope-references:
-              - "$XSAPPNAME.Display"
-        oauth2-configuration:
-          redirect-uris:
-            - "http*://*.${default-domain}/**"
 
-  - name: saas-registry-bookstore
+  # --------------------- SAAS REGISTRY ---------------------
+  - name: bookstore-registry
     type: org.cloudfoundry.managed-service
     requires:
-      - name: bookstore-cap-java-app
-      - name: xsuaa-bookstore
+      - name: srv-api
+      - name: bookstore-auth
     parameters:
       service: saas-registry
       service-plan: application
       config:
-        appName: bookstore-cap-java-app
-        xsappname: ~{xsuaa-bookstore/XSAPPNAME}
-        appUrls:
-          getDependencies: ~{bookstore-cap-java-app/srv-url}/mt/v1.0/subscriptions/dependencies
-          onSubscription: ~{bookstore-cap-java-app/srv-url}/mt/v1.0/subscriptions/tenants/{tenantId}
-        displayName: bookshop-java
-        description: A simple CAP Java project.
+        xsappname: bookstore-${org}-${space}
+        appName: bookstore-${org}-${space}
+        displayName: bookstore-${org}-${space}
+        description: A simple CAP project.
         category: 'Category'
+        appUrls:
+          getDependencies: ~{srv-api/srv-url}/mt/v1.0/subscriptions/dependencies
+          onSubscription: ~{srv-api/srv-url}/mt/v1.0/subscriptions/tenants/{tenantId}
+          onSubscriptionAsync: true
+          onUnSubscriptionAsync: true
+          onUpdateDependenciesAsync: true
+          callbackTimeoutMillis: 300000 # Increase if your deployments are taking longer than that
 
-
-  - name: service-manager
+  # --------------------- Service manager ---------------------
+  - name: bookstore-service-manager
     type: org.cloudfoundry.managed-service
     parameters:
       service: service-manager
