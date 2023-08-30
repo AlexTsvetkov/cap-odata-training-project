@@ -5,50 +5,73 @@ description: "A simple CAP project."
 parameters:
   enable-parallel-deployments: true
 modules:
-  # --------------------- Java Application ---------------------
-  - name: bookstore-cap-java-app
+  - name: bookstore-srv
     type: java
-    path: srv/target/bookstore-exec.jar
-    random-route: true
-    memory: 1024M
+    path: srv
     parameters:
       buildpack: sap_java_buildpack
     properties:
       SPRING_PROFILES_ACTIVE: cloud,sandbox
-      JBP_CONFIG_COMPONENTS: "jres: ['com.sap.xs.java.buildpack.jdk.SAPMachineJDK']"
-      JBP_CONFIG_SAP_MACHINE_JDK: "[version: 17.+, default_debug_agent_active: true]"
-      JBP_CONFIG_SPRING_AUTO_RECONFIGURATION: '{enabled: false}'
+      JBP_CONFIG_COMPONENTS: "jres: ['com.sap.xs.java.buildpack.jre.SAPMachineJRE']"
+      JBP_CONFIG_SAP_MACHINE_JRE: '{ use_offline_repository: false, version: 17.+ }'
+      CDS_MULTITENANCY_APPUI_TENANTSEPARATOR: "-"
+    build-parameters:
+      builder: custom
+      commands:
+        - mvn clean package -DskipTests=true
+      build-result: target/*-exec.jar
     provides:
       - name: srv-api # required by consumers of CAP services (e.g. approuter)
         properties:
           srv-url: ${default-url}
     requires:
       - name: bookstore-auth
+      - name: app-api
+        properties:
+          CDS_MULTITENANCY_APPUI_URL: ~{url}
       - name: mtx-api
         properties:
           CDS_MULTITENANCY_MTXS_ENABLED: true
           CDS_MULTITENANCY_SIDECAR_URL: ~{mtx-url}
       - name: bookstore-registry
-      - name: bookstore-service-manager
-      - name: approuter-api
-        properties:
-          CDS_MULTITENANCY_APPUI_URL: ~{approuter_url}
-          CDS_MULTITENANCY_APPUI_TENANTSEPARATOR: "."
 
-  # --------------------- MTX ---------------------
+  - name: bookstore
+    type: approuter.nodejs
+    path: app/ # from cds.env.folders. Consider also cds.env.build.target -> gen/app
+    parameters:
+      keep-existing-routes: true
+      disk-quota: 256M
+      memory: 256M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api # must be used in xs-app.json as well
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: bookstore-auth
+      - name: mtx-api
+        group: destinations
+        properties:
+          name: mtx-api # must be used in xs-app.json as well
+          url: ~{mtx-url}
+    provides:
+      - name: app-api
+        properties:
+          url: ${default-url}
+    properties:
+      TENANT_HOST_PATTERN: "^(.*)-${default-uri}"
+
   - name: bookstore-mtx
     type: nodejs
     path: mtx/sidecar
-    requires:
-      - name: bookstore-auth
-      - name: bookstore-service-manager
     build-parameters:
       builder: custom
       build-result: gen
       commands:
         - npm run build
       requires:
-        - name: bookstore-cap-java-app
+        - name: bookstore-srv
     parameters:
       memory: 256M
       disk-quota: 512M
@@ -56,32 +79,10 @@ modules:
       - name: mtx-api
         properties:
           mtx-url: ${default-url}
-
-  # --------------------- APPROUTER ---------------------
-  - name: approuter-bookstore
-    type: nodejs
-    path: approuter
-    parameters:
-      memory: 1024M
-      keep-existing-routes: true
-    provides:
-      - name: approuter-api
-        properties:
-          approuter_url: ${default-url}
-          application: ${app-name}
     requires:
-      - name: srv-api
-        group: destinations
-        properties:
-          name: backend
-          url: ~{srv-url}
-          forwardAuthToken: true
       - name: bookstore-auth
-    properties:
-      TENANT_HOST_PATTERN: '^(.*)-${space}-${app-name}.${default-domain}'
-resources:
 
-  # --------------------- XSUAA ---------------------
+resources:
   - name: bookstore-auth
     type: org.cloudfoundry.managed-service
     parameters:
@@ -91,20 +92,17 @@ resources:
       config:
         xsappname: bookstore-${org}-${space}
         tenant-mode: shared
-
-  # --------------------- SAAS REGISTRY ---------------------
   - name: bookstore-registry
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
-      - name: bookstore-auth
     parameters:
       service: saas-registry
       service-plan: application
       config:
         xsappname: bookstore-${org}-${space}
         appName: bookstore-${org}-${space}
-        displayName: bookstore-${org}-${space}
+        displayName: bookstore
         description: A simple CAP project.
         category: 'Category'
         appUrls:
@@ -114,10 +112,3 @@ resources:
           onUnSubscriptionAsync: true
           onUpdateDependenciesAsync: true
           callbackTimeoutMillis: 300000 # Increase if your deployments are taking longer than that
-
-  # --------------------- Service manager ---------------------
-  - name: bookstore-service-manager
-    type: org.cloudfoundry.managed-service
-    parameters:
-      service: service-manager
-      service-plan: container

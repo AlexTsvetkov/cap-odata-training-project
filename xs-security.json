@@ -30,5 +30,6 @@
   "authorities": [
     "$XSAPPNAME.cds.ExtensionDeveloper",
     "$XSAPPNAME.cds.UIFlexDeveloper"
-  ]
+  ],
+  "authorities-inheritance": false
 }

@@ -7,10 +7,10 @@
   "dependencies": {
     "@sap/capire-products": "file:sap-capire-products-1.0.0.tgz"
   },
-  "workspaces": [
-    "mtx/sidecar"
-  ],
   "devDependencies": {
     "@sap/cds-dk": "^7"
-  }
+  },
+  "workspaces": [
+    "mtx/sidecar"
+  ]
 }

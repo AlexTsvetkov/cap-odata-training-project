@@ -1,8 +1,8 @@
 {
-  "welcomeFile": "approuter/index.html",
+  "welcomeFile": "app/index.html",
   "routes": [
     {
-      "source": "^/approuter/(.*)$",
+      "source": "^/app/(.*)$",
       "target": "$1",
       "localDir": ".",
       "cacheControl": "no-cache, no-store, must-revalidate"
