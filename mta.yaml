@@ -5,7 +5,9 @@ description: "A simple CAP project."
 parameters:
   enable-parallel-deployments: true
 modules:
-  - name: bookstore-srv
+
+  # --------------------- JAVA APPLICATION  ---------------------
+  - name: bookstore-java-app
     type: java
     path: srv
     parameters:
@@ -25,17 +27,19 @@ modules:
         properties:
           srv-url: ${default-url}
     requires:
-      - name: bookstore-auth
-      - name: app-api
+      - name: bookstore-xsuaa-service
+      - name: approuter-app-api
         properties:
           CDS_MULTITENANCY_APPUI_URL: ~{url}
       - name: mtx-api
         properties:
           CDS_MULTITENANCY_MTXS_ENABLED: true
           CDS_MULTITENANCY_SIDECAR_URL: ~{mtx-url}
-      - name: bookstore-registry
+      - name: bookstore-saas-registry
+      - name: bookstore-service-manager
 
-  - name: bookstore
+  # --------------------- APPROUTER  ---------------------
+  - name: bookstore-approuter
     type: approuter.nodejs
     path: app/ # from cds.env.folders. Consider also cds.env.build.target -> gen/app
     parameters:
@@ -49,20 +53,22 @@ modules:
           name: srv-api # must be used in xs-app.json as well
           url: ~{srv-url}
           forwardAuthToken: true
-      - name: bookstore-auth
+      - name: bookstore-xsuaa-service
       - name: mtx-api
         group: destinations
         properties:
           name: mtx-api # must be used in xs-app.json as well
           url: ~{mtx-url}
     provides:
-      - name: app-api
+      - name: approuter-app-api
         properties:
           url: ${default-url}
+          domain: ${domain}
     properties:
       TENANT_HOST_PATTERN: "^(.*)-${default-uri}"
 
-  - name: bookstore-mtx
+  # --------------------- MTX SIDECAR APPLICATION ---------------------
+  - name: bookstore-mtx-app
     type: nodejs
     path: mtx/sidecar
     build-parameters:
@@ -71,19 +77,21 @@ modules:
       commands:
         - npm run build
       requires:
-        - name: bookstore-srv
+        - name: bookstore-java-app
     parameters:
       memory: 256M
       disk-quota: 512M
+    requires:
+      - name: bookstore-xsuaa-service
+      - name: bookstore-service-manager
     provides:
       - name: mtx-api
         properties:
           mtx-url: ${default-url}
-    requires:
-      - name: bookstore-auth
 
 resources:
-  - name: bookstore-auth
+  # --------------------- XSUAA SERVICE ---------------------
+  - name: bookstore-xsuaa-service
     type: org.cloudfoundry.managed-service
     parameters:
       service: xsuaa
@@ -92,7 +100,14 @@ resources:
       config:
         xsappname: bookstore-${org}-${space}
         tenant-mode: shared
-  - name: bookstore-registry
+        oauth2-configuration:
+          redirect-uris:
+            - https://*.~{approuter-app-api/domain}/**
+    requires:
+      - name: approuter-app-api
+
+  # --------------------- SAAS REGISTRY ---------------------
+  - name: bookstore-saas-registry
     type: org.cloudfoundry.managed-service
     requires:
       - name: srv-api
@@ -102,7 +117,7 @@ resources:
       config:
         xsappname: bookstore-${org}-${space}
         appName: bookstore-${org}-${space}
-        displayName: bookstore
+        displayName: bookstore-java-app
         description: A simple CAP project.
         category: 'Category'
         appUrls:
@@ -112,3 +127,10 @@ resources:
           onUnSubscriptionAsync: true
           onUpdateDependenciesAsync: true
           callbackTimeoutMillis: 300000 # Increase if your deployments are taking longer than that
+
+  # --------------------- Service manager ---------------------
+  - name: bookstore-service-manager
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: service-manager
+      service-plan: container
