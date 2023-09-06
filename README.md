@@ -1,5 +1,10 @@
 # Springboot CAP ODATA project
 
+### Prerequisites
+ * You have an SAP BTP Trial account [Get a Free Account on SAP BTP Trial](https://developers.sap.com/tutorials/hcp-create-trial-account.html)
+ * Java 17 
+ * Node v20.5.0 or higher
+
 ### Tutorials used for creating an application in the Cloud Foundry Environment:
 
 * [Build a Business Application Using CAP for Java](https://developers.sap.com/mission.cap-java-app.html)
