@@ -22,6 +22,7 @@ default-env.json
 gc_history*
 hs_err*
 *.tgz
+!sap-capire-products-1.0.0.tgz
 *.iml
 
 .vscode

@@ -32,6 +32,47 @@ Terminal hotkeys:
 clean word: `Command` + `Control` + `W`\
 Delete the line: `Command` + `Control` + `U`
 
+## Multitenancy with Cloud Application Programming Model (CAP) 
+To enable multitenancy on the SAP BTP, we need to deploy tenant aware approuter, mtx-sidecar module and configure below three services.
+
+Only when these services are bound to your application, the multitenancy feature is turned on.
+
+1. XSUAA
+2. Service Manager
+3. SaaS Provisioning service (saas-registry)
+
+#### Approuter module:
+   You deploy the approuter application as a Cloud Foundry application and as a logical part of the multitenant application. Then you configure approuter application as an external access point of the application.
+Each multitenant application has to deploy its own application router and the application router handles requests of all tenants to the application.
+The application router must determine the tenant-specific subdomain. This determination is done by using a regular expression defined in the environment variable TENANT_HOST_PATTERN. 
+   The application router then forwards the authentication request to the tenant User Account and Authentication (UAA) service and the related identity zone.
+
+
+#### XS UAA:
+Bind your multitenant application and the approuter application to the SAP Authorization and Trust Management service (technical name: xsuaa) instance, which acts as an OAuth 2.0 client to your application.
+
+In multi-tenant environments, tenants subscribe to and consume applications, which are registered as clients at the XS UAA. XS UAA creates a new OAuth2 client per application for each tenant. 
+The shared tenant mode is mandatory for an application router configured for multi-tenancy applications.
+Also, a special configuration of an XS UAA service instance is required to enable authorization between the SaaS Provisioning service, Cloud Application Programming Model Java application, and MTX sidecar.
+
+#### Service Manager:
+A service-manager instance is required that the Cloud Application Programming Model Java SDK can create database containers per tenant at application runtime. 
+It doesn’t require special parameters and can be added as a resource in mta.yaml.
+
+#### SaaS Provisioning Service (saas-registry):
+A saas-registry service instance is required to make your application known to the SAP BTP Provisioning service and to register the endpoints that should be called when tenants are added or removed. 
+The service can be configured as a resource in mta.yaml
+
+#### mtx-sidecar module:
+Cloud Application Programming Model provides the npm module for Node.js. It provides APIs for implementing SaaS applications on SAP BTP.
+Java applications need to run and maintain the cds-mtx module as a sidecar application.
+Multitenant Cloud Application Programming Model Java applications automatically expose the tenant provisioning APIs.
+
+provisioning: implements the subscription callback API as required by SAP BTP. 
+If a tenant is subscribing to the SaaS application, the onboarding request is handled. cds-mtx is contacting the SAP HANA Service Manager service to create a new HDI container for the tenant. 
+Then, database artifacts get deployed into this HDI container.
+In addition, the unsubscribe operation and the “get dependencies” operations are supported.
+
 ### How to configure multitenancy support
 
 1. Add xsuaa and approuter to your project:  run `cds add approuter`. \
@@ -132,4 +173,5 @@ Delete the line: `Command` + `Control` + `U`
 - Run `cf map-route bookstore-approuter <YOUR DOMAIN> --hostname <SUBSCRIBER TENANT>-<ORG>-<SPACE>-bookstore-approuter`
   or create and bind the route manually.\
   Example: `cf map-route bookstore-approuter cfapps.us10-001.hana.ondemand.com --hostname tenant2-wm0m8hbo-c3fbaed9trial-dev-bookstore-approuter`
+  Example: `cf map-route bookstore-approuter cfapps.us10-001.hana.ondemand.com --hostname tenant4-t324vtoo-c3fbaed9trial-dev-bookstore-approuter`
 
