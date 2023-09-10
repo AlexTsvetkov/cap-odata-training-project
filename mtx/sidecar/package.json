@@ -1,27 +1,20 @@
 {
+  "name": "bookstore-mtx",
   "dependencies": {
     "@sap/cds": "^7",
-    "@sap/cds-mtxs": "^1",
+    "@sap/cds-hana": "^2",
+    "@sap/cds-mtxs": "^1.9",
     "@sap/xssec": "^3",
     "express": "^4",
-    "hdb": "^0",
-    "passport": "^0"
+    "passport": ">=0.6.0"
   },
   "devDependencies": {
-    "sqlite3": "^5",
-    "pm2": "^5.3.0"
-  },
-  "engines": {
-    "node": "^16"
-  },
-  "cds": {
-    "profile": "mtx-sidecar",
-    "[development]": {
-      "requires": { "auth": "dummy" }
-    }
+    "@cap-js/sqlite": "^1"
   },
   "scripts": {
     "start": "cds-serve",
-    "build": "cds build ../.. --for mtx-sidecar --production && cd gen && npm install"
+    "build": "cds build ../.. --for mtx-sidecar --production && cd gen && npm install"  },
+  "cds": {
+    "profile": "mtx-sidecar"
   }
 }

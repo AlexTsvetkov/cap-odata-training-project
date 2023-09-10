@@ -138,13 +138,12 @@ In addition, the unsubscribe operation and the “get dependencies” operations
   "attributes": [],
   "role-templates": []
 }
-
 ```
 
 3. Now we need to generate `mta.yaml` deployment file that will include all previously configured modules,
    run `cds add mta`
 4. In the generated `mta.yaml` we need to modify several modules:
-- In module xsuaa add `oauth2-configuration for redirect uris` and add `dependency to your approuter`, xsuaa module should look like this:
+- In module xsuaa add `oauth2-configuration` for redirect uris and add `dependency to your approuter`, xsuaa module should look like this:
 ```yaml
   - name: bookstore-xsuaa-service
     type: org.cloudfoundry.managed-service
@@ -168,6 +167,22 @@ In addition, the unsubscribe operation and the “get dependencies” operations
         properties:
           SUBSCRIPTION_URL: ~{app-protocol}://\${tenant_subdomain}-~{app-uri}
 ```
+- In `Approuter` module add `domain` in `provides` section :
+```yaml
+    provides:
+      - name: approuter-app-api
+        properties:
+          url: ${default-url}
+#This line should be added:          
+          domain: ${domain}
+```
+
+#### Troubleshooting:
+If during running command `mbt build` such error thrown `ERROR could not build the "bookstore-mtx-app" module: could not execute the "npm run build" command: exit status 1`
+then in mtx/sidecar directory update your package.json, in sript section replace build line with following build:
+```json
+ "build": "cds build ../.. --for mtx-sidecar --production && cd gen && npm install"
+```
 
 ### Deploy Multitenant Application:
 
@@ -179,4 +194,22 @@ In addition, the unsubscribe operation and the “get dependencies” operations
   or create and bind the route manually.\
   Example: `cf map-route bookstore-approuter cfapps.us10-001.hana.ondemand.com --hostname tenant2-wm0m8hbo-c3fbaed9trial-dev-bookstore-approuter`
   Example: `cf map-route bookstore-approuter cfapps.us10-001.hana.ondemand.com --hostname tenant4-t324vtoo-c3fbaed9trial-dev-bookstore-approuter`
+
+
+### Adding roles for SAAS Registry Dashboard
+![img.png](srv/src/main/resources/Screenshot 2023-09-10 at 19.17.52.png)
+
+If you try to access SAAS Registry Dashboard by clicking the link of running saas-registry instance you will see the page saying `You are not authorized to access the Subscription Management Dashboard.`
+
+To get access you wil need to set up a role collection:
+
+1. Go to the Security
+2. Go to Role Collection 
+3. Add a new Role Collection by clicking + button, call it whatever you want and hit create
+4. Scroll down and click edit that new role collection and hit edit
+5. Add two roles `Subscription Management Dashboard Administrator` and `Subscription Management Dashboard Viewer`
+6. In Users tab add your email address
+
+There is a video tutorial available: https://www.youtube.com/watch?v=W49RRIPJxfo&t=256s&ab_channel=SAPHANAAcademy
+
 

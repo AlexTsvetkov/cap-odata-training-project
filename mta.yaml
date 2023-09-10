@@ -27,10 +27,10 @@ modules:
         properties:
           srv-url: ${default-url}
     requires:
-      - name: bookstore-xsuaa-service
       - name: approuter-app-api
         properties:
           CDS_MULTITENANCY_APPUI_URL: ~{url}
+      - name: bookstore-xsuaa-service
       - name: mtx-api
         properties:
           CDS_MULTITENANCY_MTXS_ENABLED: true
@@ -46,6 +46,8 @@ modules:
       keep-existing-routes: true
       disk-quota: 256M
       memory: 256M
+    properties:
+      TENANT_HOST_PATTERN: "^(.*)-${default-uri}"
     requires:
       - name: srv-api
         group: destinations
@@ -53,24 +55,25 @@ modules:
           name: srv-api # must be used in xs-app.json as well
           url: ~{srv-url}
           forwardAuthToken: true
-      - name: bookstore-xsuaa-service
       - name: mtx-api
         group: destinations
         properties:
           name: mtx-api # must be used in xs-app.json as well
           url: ~{mtx-url}
+      - name: bookstore-xsuaa-service
     provides:
       - name: approuter-app-api
         properties:
           url: ${default-url}
           domain: ${domain}
-    properties:
-      TENANT_HOST_PATTERN: "^(.*)-${default-uri}"
 
   # --------------------- MTX SIDECAR APPLICATION ---------------------
   - name: bookstore-mtx-app
     type: nodejs
     path: mtx/sidecar
+    requires:
+      - name: bookstore-xsuaa-service
+      - name: bookstore-service-manager
     build-parameters:
       builder: custom
       build-result: gen
@@ -81,16 +84,13 @@ modules:
     parameters:
       memory: 256M
       disk-quota: 512M
-    requires:
-      - name: bookstore-xsuaa-service
-      - name: bookstore-service-manager
     provides:
       - name: mtx-api
         properties:
           mtx-url: ${default-url}
 
 resources:
-  # --------------------- XSUAA SERVICE ---------------------
+   # --------------------- XSUAA SERVICE ---------------------
   - name: bookstore-xsuaa-service
     type: org.cloudfoundry.managed-service
     parameters:

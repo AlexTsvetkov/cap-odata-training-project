@@ -6,8 +6,8 @@
     "deploy-format": "hdbtable"
   },
   "requires": {
-    "multitenancy": true,
-    "toggles": true
+    "auth": "xsuaa",
+    "multitenancy": true
   },
   "profiles": [
     "with-mtx-sidecar",
