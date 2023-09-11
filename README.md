@@ -10,6 +10,7 @@
 * [Build a Business Application Using CAP for Java](https://developers.sap.com/mission.cap-java-app.html)
 * [CAPire official documentation](https://cap.cloud.sap/docs/get-started/jumpstart)
 * [Start Using SAP HANA Cloud Trial in SAP BTP Cockpit](https://developers.sap.com/tutorials/hana-cloud-mission-trial-2.html)
+* [Multitenant application using Cloud Application Programming Model (CAP)](https://blogs.sap.com/2021/05/19/multitenant-application-using-cloud-application-programming-model-cap/)
 
 ### Useful commands
 
@@ -193,11 +194,9 @@ then in mtx/sidecar directory update your package.json, in sript section replace
 - Run `cf map-route bookstore-approuter <YOUR DOMAIN> --hostname <SUBSCRIBER TENANT>-<ORG>-<SPACE>-bookstore-approuter`
   or create and bind the route manually.\
   Example: `cf map-route bookstore-approuter cfapps.us10-001.hana.ondemand.com --hostname tenant2-wm0m8hbo-c3fbaed9trial-dev-bookstore-approuter`
-  Example: `cf map-route bookstore-approuter cfapps.us10-001.hana.ondemand.com --hostname tenant4-t324vtoo-c3fbaed9trial-dev-bookstore-approuter`
-
 
 ### Adding roles for SAAS Registry Dashboard
-![img.png](srv/src/main/resources/Screenshot 2023-09-10 at 19.17.52.png)
+![img.png](srv/src/main/resources/Screenshot.png)
 
 If you try to access SAAS Registry Dashboard by clicking the link of running saas-registry instance you will see the page saying `You are not authorized to access the Subscription Management Dashboard.`
 
