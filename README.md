@@ -196,7 +196,7 @@ then in mtx/sidecar directory update your package.json, in sript section replace
   Example: `cf map-route bookstore-approuter cfapps.us10-001.hana.ondemand.com --hostname tenant2-wm0m8hbo-c3fbaed9trial-dev-bookstore-approuter`
 
 ### Adding roles for SAAS Registry Dashboard
-![img.png](srv/src/main/resources/Screenshot.png)
+![img.png](Screenshot.png)
 
 If you try to access SAAS Registry Dashboard by clicking the link of running saas-registry instance you will see the page saying `You are not authorized to access the Subscription Management Dashboard.`
 
@@ -209,6 +209,14 @@ To get access you wil need to set up a role collection:
 5. Add two roles `Subscription Management Dashboard Administrator` and `Subscription Management Dashboard Viewer`
 6. In Users tab add your email address
 
-There is a video tutorial available: https://www.youtube.com/watch?v=W49RRIPJxfo&t=256s&ab_channel=SAPHANAAcademy
+Recourses: https://www.youtube.com/watch?v=W49RRIPJxfo&t=256s&ab_channel=SAPHANAAcademy
 
+### Adding roles for managing instances in HANA Cloud
+
+1. To ensure that your desired user has the necessary permissions to manage instances in HANA Cloud Central, navigate to **Security
+   -> Users** in the left hand side menu. Then click on your user.
+2. Click on the **three dots** in the right-hand panel to find the **Assign Role Collection** button.
+3. Select **SAP HANA Cloud Administrator** then click Assign Role Collection.
+
+Recourses: https://developers.sap.com/tutorials/hana-cloud-mission-trial-2.html
 
