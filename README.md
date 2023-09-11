@@ -4,6 +4,7 @@
  * You have an SAP BTP Trial account [Get a Free Account on SAP BTP Trial](https://developers.sap.com/tutorials/hcp-create-trial-account.html)
  * Java 17 
  * Node v20.5.0 or higher
+ * Subscription to Haha Cloud and Tools plan, tutorial:  https://developers.sap.com/tutorials/hana-cloud-mission-trial-2.html
 
 ### Tutorials used for creating an application in the Cloud Foundry Environment:
 
@@ -209,6 +210,14 @@ To get access you wil need to set up a role collection:
 5. Add two roles `Subscription Management Dashboard Administrator` and `Subscription Management Dashboard Viewer`
 6. In Users tab add your email address
 
-There is a video tutorial available: https://www.youtube.com/watch?v=W49RRIPJxfo&t=256s&ab_channel=SAPHANAAcademy
+Recourses: https://www.youtube.com/watch?v=W49RRIPJxfo&t=256s&ab_channel=SAPHANAAcademy
 
+### Adding roles for managing instances in HANA Cloud
+
+1. To ensure that your desired user has the necessary permissions to manage instances in HANA Cloud Central, navigate to **Security
+-> Users** in the left hand side menu. Then click on your user.
+2. Click on the **three dots** in the right-hand panel to find the **Assign Role Collection** button.
+3. Select **SAP HANA Cloud Administrator** then click Assign Role Collection.
+
+Recourses: https://developers.sap.com/tutorials/hana-cloud-mission-trial-2.html
 
