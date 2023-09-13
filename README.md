@@ -16,6 +16,8 @@ Add sample entity and OData Service
 Add sample data (csv files)
 ```cds add data```
 
+Then you can generate test data for CSV file with [Test Data plugin](https://plugins.jetbrains.com/plugin/16873-test-data)
+
 ```cds add approuter```
 
 ```cds add multitenancy```
