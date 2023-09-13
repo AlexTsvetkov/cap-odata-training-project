@@ -1,19 +1,44 @@
 # Springboot CAP ODATA project
 
-### Prerequisites
+## Prerequisites
  * You have an SAP BTP Trial account [Get a Free Account on SAP BTP Trial](https://developers.sap.com/tutorials/hcp-create-trial-account.html)
  * Java 17 
- * Node v20.5.0 or higher
+ * Node v18.17.1 or higher, npm verion 9.6.7 or higher, cds version 7 or higher
  * Subscribe to Haha Cloud services, tools plan, then create new instance of Hana DB, more info in tutorial:  https://developers.sap.com/tutorials/hana-cloud-mission-trial-2.html
 
-### Tutorials used for creating an application in the Cloud Foundry Environment:
+![img.png](img.png)
+
+
+## cds commands
+
+Add sample entity and OData Service
+```cds add samples```
+Add sample data (csv files)
+```cds add data```
+
+```cds add approuter```
+
+```cds add multitenancy```
+
+```cds add mta```
+
+
+
+## Create application skeleton
+```
+mvn -B archetype:generate -DarchetypeArtifactId=cds-services-archetype -DarchetypeGroupId=com.sap.cds \
+-DarchetypeVersion=RELEASE -DjdkVersion=17 \
+-DgroupId=com.sap.cap -DartifactId=products-service -Dpackage=com.sap.cap.productsservice
+```
+
+## Tutorials used for creating an application in the Cloud Foundry Environment:
 
 * [Build a Business Application Using CAP for Java](https://developers.sap.com/mission.cap-java-app.html)
 * [CAPire official documentation](https://cap.cloud.sap/docs/get-started/jumpstart)
 * [Start Using SAP HANA Cloud Trial in SAP BTP Cockpit](https://developers.sap.com/tutorials/hana-cloud-mission-trial-2.html)
 * [Multitenant application using Cloud Application Programming Model (CAP)](https://blogs.sap.com/2021/05/19/multitenant-application-using-cloud-application-programming-model-cap/)
 
-### Useful commands
+## Useful commands
 
 Get space guid
 
@@ -48,29 +73,29 @@ Only when these services are bound to your application, the multitenancy feature
 2. Service Manager
 3. SaaS Provisioning service (saas-registry)
 
-#### Approuter module:
+### Approuter module:
    You deploy the approuter application as a Cloud Foundry application and as a logical part of the multitenant application. Then you configure approuter application as an external access point of the application.
 Each multitenant application has to deploy its own application router and the application router handles requests of all tenants to the application.
 The application router must determine the tenant-specific subdomain. This determination is done by using a regular expression defined in the environment variable TENANT_HOST_PATTERN. 
    The application router then forwards the authentication request to the tenant User Account and Authentication (UAA) service and the related identity zone.
 
 
-#### XS UAA:
+### XS UAA:
 Bind your multitenant application and the approuter application to the SAP Authorization and Trust Management service (technical name: xsuaa) instance, which acts as an OAuth 2.0 client to your application.
 
 In multi-tenant environments, tenants subscribe to and consume applications, which are registered as clients at the XS UAA. XS UAA creates a new OAuth2 client per application for each tenant. 
 The shared tenant mode is mandatory for an application router configured for multi-tenancy applications.
 Also, a special configuration of an XS UAA service instance is required to enable authorization between the SaaS Provisioning service, Cloud Application Programming Model Java application, and MTX sidecar.
 
-#### Service Manager:
+### Service Manager:
 A service-manager instance is required that the Cloud Application Programming Model Java SDK can create database containers per tenant at application runtime. 
 It doesn’t require special parameters and can be added as a resource in mta.yaml.
 
-#### SaaS Provisioning Service (saas-registry):
+### SaaS Provisioning Service (saas-registry):
 A saas-registry service instance is required to make your application known to the SAP BTP Provisioning service and to register the endpoints that should be called when tenants are added or removed. 
 The service can be configured as a resource in mta.yaml
 
-#### mtx-sidecar module:
+### mtx-sidecar module:
 Cloud Application Programming Model provides the npm module for Node.js. It provides APIs for implementing SaaS applications on SAP BTP.
 Java applications need to run and maintain the cds-mtx module as a sidecar application.
 Multitenant Cloud Application Programming Model Java applications automatically expose the tenant provisioning APIs.
@@ -80,7 +105,7 @@ If a tenant is subscribing to the SaaS application, the onboarding request is ha
 Then, database artifacts get deployed into this HDI container.
 In addition, the unsubscribe operation and the “get dependencies” operations are supported.
 
-### How to configure multitenancy support
+## How to configure multitenancy support
 
 1. Add xsuaa and approuter to your project:  run `cds add approuter`. \
    This will create `app` directory in your project root with approuter application and `xs-security.json` file with
@@ -179,14 +204,14 @@ In addition, the unsubscribe operation and the “get dependencies” operations
           domain: ${domain}
 ```
 
-#### Troubleshooting:
+### Troubleshooting:
 If during running command `mbt build` such error thrown `ERROR could not build the "bookstore-mtx-app" module: could not execute the "npm run build" command: exit status 1`
 then in mtx/sidecar directory update your package.json, in sript section replace build line with following build:
 ```json
  "build": "cds build ../.. --for mtx-sidecar --production && cd gen && npm install"
 ```
 
-### Deploy Multitenant Application:
+## Deploy Multitenant Application:
 
 - Run `mbt build`
 - Run `cf login`
@@ -196,7 +221,7 @@ then in mtx/sidecar directory update your package.json, in sript section replace
   or create and bind the route manually.\
   Example: `cf map-route bookstore-approuter cfapps.us10-001.hana.ondemand.com --hostname tenant2-wm0m8hbo-c3fbaed9trial-dev-bookstore-approuter`
 
-### Adding roles for SAAS Registry Dashboard
+## Adding roles for SAAS Registry Dashboard
 ![img.png](Screenshot.png)
 
 If you try to access SAAS Registry Dashboard by clicking the link of running saas-registry instance you will see the page saying `You are not authorized to access the Subscription Management Dashboard.`
@@ -212,7 +237,7 @@ To get access you wil need to set up a role collection:
 
 Recourses: https://www.youtube.com/watch?v=W49RRIPJxfo&t=256s&ab_channel=SAPHANAAcademy
 
-### Adding roles for managing instances in HANA Cloud
+## Adding roles for managing instances in HANA Cloud
 
 1. To ensure that your desired user has the necessary permissions to manage instances in HANA Cloud Central, navigate to **Security
    -> Users** in the left hand side menu. Then click on your user.
