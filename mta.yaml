@@ -4,9 +4,10 @@ version: 1.0.0-SNAPSHOT
 description: "A simple CAP project."
 parameters:
   enable-parallel-deployments: true
-modules:
+
 
   # --------------------- JAVA APPLICATION  ---------------------
+modules:
   - name: bookstore-java-app
     type: java
     path: srv
@@ -90,7 +91,7 @@ modules:
           mtx-url: ${default-url}
 
 resources:
-   # --------------------- XSUAA SERVICE ---------------------
+  # --------------------- XSUAA SERVICE ---------------------
   - name: bookstore-xsuaa-service
     type: org.cloudfoundry.managed-service
     parameters:
