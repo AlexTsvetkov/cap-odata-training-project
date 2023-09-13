@@ -4,7 +4,7 @@
  * You have an SAP BTP Trial account [Get a Free Account on SAP BTP Trial](https://developers.sap.com/tutorials/hcp-create-trial-account.html)
  * Java 17 
  * Node v20.5.0 or higher
- * Subscription to Haha Cloud and Tools plan, tutorial:  https://developers.sap.com/tutorials/hana-cloud-mission-trial-2.html
+ * Subscribe to Haha Cloud services, tools plan, then create new instance of Hana DB, more info in tutorial:  https://developers.sap.com/tutorials/hana-cloud-mission-trial-2.html
 
 ### Tutorials used for creating an application in the Cloud Foundry Environment:
 
